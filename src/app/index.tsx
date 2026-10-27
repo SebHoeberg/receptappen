@@ -40,6 +40,24 @@ export default function HomeScreen() {
     loadRecipes();
   }, []);
 
+  function openRecipe(recipe: Recipe) {
+    router.push({
+      pathname: "/recipe-detail",
+      params: { id: recipe.id.toString() },
+    });
+  }
+
+  function surpriseMe() {
+    if (recipes.length === 0) {
+      return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * recipes.length);
+    const randomRecipe = recipes[randomIndex];
+
+    openRecipe(randomRecipe);
+  }
+
   const filteredRecipes = recipes.filter((recipe) => {
     const search = searchText.trim().toLowerCase();
 
@@ -68,6 +86,17 @@ export default function HomeScreen() {
         returnKeyType="search"
       />
 
+      <Pressable
+        style={[
+          styles.surpriseButton,
+          (loading || recipes.length === 0) && styles.disabledButton,
+        ]}
+        onPress={surpriseMe}
+        disabled={loading || recipes.length === 0}
+      >
+        <Text style={styles.surpriseButtonText}> Överraska mig!</Text>
+      </Pressable>
+
       {loading ? (
         <ActivityIndicator size="large" />
       ) : error ? (
@@ -90,12 +119,7 @@ export default function HomeScreen() {
           renderItem={({ item }) => (
             <Pressable
               style={styles.recipeCard}
-              onPress={() =>
-                router.push({
-                  pathname: "/recipe-detail",
-                  params: { id: item.id.toString() },
-                })
-              }
+              onPress={() => openRecipe(item)}
             >
               <Image source={{ uri: item.image }} style={styles.recipeImage} />
 
@@ -146,7 +170,22 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 16,
     color: "#333333",
+    marginBottom: 15,
+  },
+  surpriseButton: {
+    backgroundColor: "#2E7D32",
+    borderRadius: 12,
+    paddingVertical: 15,
+    alignItems: "center",
     marginBottom: 20,
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  surpriseButtonText: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "bold",
   },
   list: {
     paddingBottom: 30,
