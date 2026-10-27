@@ -1,0 +1,190 @@
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
+import {
+    ActivityIndicator,
+    FlatList,
+    Image,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { getFavorites } from "../services/favoriteStorage";
+import { getRecipes, Recipe } from "../services/recipeApi";
+
+export default function FavoritesScreen() {
+  const router = useRouter();
+
+  const [favorites, setFavorites] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadFavorites = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [recipes, favoriteIds] = await Promise.all([
+        getRecipes(),
+        getFavorites(),
+      ]);
+
+      const savedRecipes = recipes.filter((recipe) =>
+        favoriteIds.includes(recipe.id),
+      );
+
+      setFavorites(savedRecipes);
+    } catch {
+      setError("Kunde inte hämta dina favoriter.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadFavorites();
+    }, [loadFavorites]),
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Text style={styles.backText}>← Tillbaka</Text>
+      </Pressable>
+
+      <Text style={styles.title}>Mina favoriter</Text>
+      <Text style={styles.subtitle}>Här hittar du dina sparade recept.</Text>
+
+      {loading ? (
+        <ActivityIndicator size="large" />
+      ) : error ? (
+        <View style={styles.messageContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+
+          <Pressable onPress={loadFavorites}>
+            <Text style={styles.retryText}>Försök igen</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <FlatList
+          data={favorites}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>
+              Du har inga sparade favoriter ännu.
+            </Text>
+          }
+          renderItem={({ item }) => (
+            <Pressable
+              style={styles.recipeCard}
+              onPress={() =>
+                router.push({
+                  pathname: "/recipe-detail",
+                  params: { id: item.id.toString() },
+                })
+              }
+            >
+              <Image source={{ uri: item.image }} style={styles.recipeImage} />
+
+              <View style={styles.recipeInfo}>
+                <Text style={styles.recipeName}>{item.name}</Text>
+
+                <Text style={styles.recipeTime}>
+                  {item.prepTimeMinutes + item.cookTimeMinutes} min
+                </Text>
+
+                <Text style={styles.recipeServings}>
+                  {item.servings} portioner
+                </Text>
+              </View>
+            </Pressable>
+          )}
+        />
+      )}
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#FFF9F2",
+    paddingHorizontal: 20,
+  },
+  backButton: {
+    paddingVertical: 15,
+  },
+  backText: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#2E7D32",
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: "bold",
+    color: "#333333",
+    marginTop: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#666666",
+    marginTop: 8,
+    marginBottom: 20,
+  },
+  list: {
+    paddingBottom: 30,
+  },
+  recipeCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    marginBottom: 15,
+    overflow: "hidden",
+  },
+  recipeImage: {
+    width: "100%",
+    height: 180,
+  },
+  recipeInfo: {
+    padding: 15,
+  },
+  recipeName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333333",
+    marginBottom: 8,
+  },
+  recipeTime: {
+    fontSize: 14,
+    color: "#666666",
+    marginBottom: 4,
+  },
+  recipeServings: {
+    fontSize: 14,
+    color: "#666666",
+  },
+  messageContainer: {
+    alignItems: "center",
+    marginTop: 40,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#B00020",
+    textAlign: "center",
+  },
+  retryText: {
+    fontSize: 16,
+    color: "#2E7D32",
+    fontWeight: "bold",
+    marginTop: 15,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#666666",
+    textAlign: "center",
+    marginTop: 40,
+  },
+});

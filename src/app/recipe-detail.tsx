@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
     ActivityIndicator,
+    Alert,
     Image,
     Pressable,
     ScrollView,
@@ -11,6 +12,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import {
+    addFavorite,
+    isFavorite,
+    removeFavorite,
+} from "../services/favoriteStorage";
 import { getRecipes, Recipe } from "../services/recipeApi";
 
 export default function RecipeDetailScreen() {
@@ -20,8 +26,12 @@ export default function RecipeDetailScreen() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [favorite, setFavorite] = useState(false);
+  const [savingFavorite, setSavingFavorite] = useState(false);
 
   useEffect(() => {
+    let active = true;
+
     async function loadRecipe() {
       try {
         setLoading(true);
@@ -34,16 +44,51 @@ export default function RecipeDetailScreen() {
           throw new Error("Receptet hittades inte.");
         }
 
-        setRecipe(selectedRecipe);
+        const savedAsFavorite = await isFavorite(selectedRecipe.id);
+
+        if (active) {
+          setRecipe(selectedRecipe);
+          setFavorite(savedAsFavorite);
+        }
       } catch {
-        setError("Kunde inte visa receptet.");
+        if (active) {
+          setError("Kunde inte visa receptet.");
+        }
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     }
 
     loadRecipe();
+
+    return () => {
+      active = false;
+    };
   }, [id]);
+
+  async function toggleFavorite() {
+    if (!recipe || savingFavorite) {
+      return;
+    }
+
+    try {
+      setSavingFavorite(true);
+
+      if (favorite) {
+        await removeFavorite(recipe.id);
+        setFavorite(false);
+      } else {
+        await addFavorite(recipe.id);
+        setFavorite(true);
+      }
+    } catch {
+      Alert.alert("Något gick fel", "Kunde inte spara ändringen. Försök igen.");
+    } finally {
+      setSavingFavorite(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -68,6 +113,28 @@ export default function RecipeDetailScreen() {
             {"  •  "}
             {recipe.servings} portioner
           </Text>
+
+          <Pressable
+            style={[
+              styles.favoriteButton,
+              favorite && styles.favoriteButtonActive,
+            ]}
+            onPress={toggleFavorite}
+            disabled={savingFavorite}
+          >
+            <Text
+              style={[
+                styles.favoriteButtonText,
+                favorite && styles.favoriteButtonTextActive,
+              ]}
+            >
+              {savingFavorite
+                ? "Sparar..."
+                : favorite
+                  ? "Ta bort från favoriter"
+                  : "Spara som favorit"}
+            </Text>
+          </Pressable>
 
           <Text style={styles.heading}>Ingredienser</Text>
 
@@ -133,6 +200,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#666666",
     marginTop: 10,
+  },
+  favoriteButton: {
+    borderWidth: 1,
+    borderColor: "#2E7D32",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  favoriteButtonActive: {
+    backgroundColor: "#2E7D32",
+  },
+  favoriteButtonText: {
+    color: "#2E7D32",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  favoriteButtonTextActive: {
+    color: "#FFFFFF",
   },
   heading: {
     fontSize: 22,

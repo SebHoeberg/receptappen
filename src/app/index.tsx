@@ -53,9 +53,7 @@ export default function HomeScreen() {
     }
 
     const randomIndex = Math.floor(Math.random() * recipes.length);
-    const randomRecipe = recipes[randomIndex];
-
-    openRecipe(randomRecipe);
+    openRecipe(recipes[randomIndex]);
   }
 
   const filteredRecipes = recipes.filter((recipe) => {
@@ -94,7 +92,14 @@ export default function HomeScreen() {
         onPress={surpriseMe}
         disabled={loading || recipes.length === 0}
       >
-        <Text style={styles.surpriseButtonText}> Överraska mig!</Text>
+        <Text style={styles.surpriseButtonText}>Överraska mig!</Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.favoritesButton}
+        onPress={() => router.push("/favorites")}
+      >
+        <Text style={styles.favoritesButtonText}>Mina favoriter</Text>
       </Pressable>
 
       {loading ? (
@@ -177,13 +182,27 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 15,
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 12,
   },
   disabledButton: {
     opacity: 0.5,
   },
   surpriseButtonText: {
     color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "bold",
+  },
+  favoritesButton: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#2E7D32",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  favoritesButtonText: {
+    color: "#2E7D32",
     fontSize: 17,
     fontWeight: "bold",
   },
