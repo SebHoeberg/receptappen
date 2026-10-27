@@ -7,6 +7,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,6 +18,7 @@ export default function HomeScreen() {
   const router = useRouter();
 
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [searchText, setSearchText] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,12 +40,33 @@ export default function HomeScreen() {
     loadRecipes();
   }, []);
 
+  const filteredRecipes = recipes.filter((recipe) => {
+    const search = searchText.trim().toLowerCase();
+
+    return (
+      recipe.name.toLowerCase().includes(search) ||
+      recipe.ingredients.some((ingredient) =>
+        ingredient.toLowerCase().includes(search),
+      )
+    );
+  });
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Receptappen</Text>
       <Text style={styles.subtitle}>
         Hitta inspiration till din nästa måltid!
       </Text>
+
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Sök recept eller ingrediens..."
+        placeholderTextColor="#888888"
+        value={searchText}
+        onChangeText={setSearchText}
+        autoCorrect={false}
+        returnKeyType="search"
+      />
 
       {loading ? (
         <ActivityIndicator size="large" />
@@ -56,8 +79,14 @@ export default function HomeScreen() {
         </View>
       ) : (
         <FlatList
-          data={recipes}
+          data={filteredRecipes}
           keyExtractor={(item) => item.id.toString()}
+          keyboardShouldPersistTaps="handled"
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>
+              Inga recept hittades. Prova en annan sökning.
+            </Text>
+          }
           renderItem={({ item }) => (
             <Pressable
               style={styles.recipeCard}
@@ -108,6 +137,17 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 20,
   },
+  searchInput: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#DDDDDD",
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: "#333333",
+    marginBottom: 20,
+  },
   list: {
     paddingBottom: 30,
   },
@@ -153,5 +193,11 @@ const styles = StyleSheet.create({
     color: "#2E7D32",
     fontWeight: "bold",
     marginTop: 15,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#666666",
+    textAlign: "center",
+    marginTop: 30,
   },
 });
