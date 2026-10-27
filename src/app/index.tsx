@@ -1,8 +1,10 @@
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
   Image,
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -12,6 +14,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { getRecipes, Recipe } from "../services/recipeApi";
 
 export default function HomeScreen() {
+  const router = useRouter();
+
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,27 +50,38 @@ export default function HomeScreen() {
       ) : error ? (
         <View style={styles.messageContainer}>
           <Text style={styles.errorText}>{error}</Text>
-          <Text style={styles.retryText} onPress={loadRecipes}>
-            Försök igen
-          </Text>
+          <Pressable onPress={loadRecipes}>
+            <Text style={styles.retryText}>Försök igen</Text>
+          </Pressable>
         </View>
       ) : (
         <FlatList
           data={recipes}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <View style={styles.recipeCard}>
+            <Pressable
+              style={styles.recipeCard}
+              onPress={() =>
+                router.push({
+                  pathname: "/recipe-detail",
+                  params: { id: item.id.toString() },
+                })
+              }
+            >
               <Image source={{ uri: item.image }} style={styles.recipeImage} />
+
               <View style={styles.recipeInfo}>
                 <Text style={styles.recipeName}>{item.name}</Text>
+
                 <Text style={styles.recipeTime}>
                   {item.prepTimeMinutes + item.cookTimeMinutes} min
                 </Text>
+
                 <Text style={styles.recipeServings}>
                   {item.servings} portioner
                 </Text>
               </View>
-            </View>
+            </Pressable>
           )}
           contentContainerStyle={styles.list}
         />
