@@ -12,12 +12,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { getFavorites } from "../services/favoriteStorage";
+import { getRecipePhoto } from "../services/photoStorage";
 import { getRecipes, Recipe } from "../services/recipeApi";
 
 export default function FavoritesScreen() {
   const router = useRouter();
 
   const [favorites, setFavorites] = useState<Recipe[]>([]);
+  const [recipePhotos, setRecipePhotos] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +37,23 @@ export default function FavoritesScreen() {
         favoriteIds.includes(recipe.id),
       );
 
+      const photos = await Promise.all(
+        savedRecipes.map(async (recipe) => ({
+          id: recipe.id,
+          uri: await getRecipePhoto(recipe.id),
+        })),
+      );
+
+      const updatedPhotos: Record<number, string> = {};
+
+      photos.forEach(({ id, uri }) => {
+        if (uri) {
+          updatedPhotos[id] = uri;
+        }
+      });
+
       setFavorites(savedRecipes);
+      setRecipePhotos(updatedPhotos);
     } catch {
       setError("Could not load your favorites.");
     } finally {
@@ -45,7 +63,19 @@ export default function FavoritesScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      loadFavorites();
+      let active = true;
+
+      async function refreshFavorites() {
+        if (active) {
+          await loadFavorites();
+        }
+      }
+
+      refreshFavorites();
+
+      return () => {
+        active = false;
+      };
     }, [loadFavorites]),
   );
 
@@ -71,6 +101,7 @@ export default function FavoritesScreen() {
       ) : (
         <FlatList
           data={favorites}
+          extraData={recipePhotos}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
@@ -88,7 +119,12 @@ export default function FavoritesScreen() {
                 })
               }
             >
-              <Image source={{ uri: item.image }} style={styles.recipeImage} />
+              <Image
+                source={{
+                  uri: recipePhotos[item.id] ?? item.image,
+                }}
+                style={styles.recipeImage}
+              />
 
               <View style={styles.recipeInfo}>
                 <Text style={styles.recipeName}>{item.name}</Text>

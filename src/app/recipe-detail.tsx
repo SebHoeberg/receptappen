@@ -1,3 +1,4 @@
+import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -17,6 +18,11 @@ import {
   isFavorite,
   removeFavorite,
 } from "../services/favoriteStorage";
+import {
+  getRecipePhoto,
+  removeRecipePhoto,
+  saveRecipePhoto,
+} from "../services/photoStorage";
 import { getRecipes, Recipe } from "../services/recipeApi";
 
 export default function RecipeDetailScreen() {
@@ -28,6 +34,8 @@ export default function RecipeDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   const [favorite, setFavorite] = useState(false);
   const [savingFavorite, setSavingFavorite] = useState(false);
+  const [customPhoto, setCustomPhoto] = useState<string | null>(null);
+  const [savingPhoto, setSavingPhoto] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -44,11 +52,15 @@ export default function RecipeDetailScreen() {
           throw new Error("Recipe not found.");
         }
 
-        const savedAsFavorite = await isFavorite(selectedRecipe.id);
+        const [savedAsFavorite, savedPhoto] = await Promise.all([
+          isFavorite(selectedRecipe.id),
+          getRecipePhoto(selectedRecipe.id),
+        ]);
 
         if (active) {
           setRecipe(selectedRecipe);
           setFavorite(savedAsFavorite);
+          setCustomPhoto(savedPhoto);
         }
       } catch {
         if (active) {
@@ -93,6 +105,79 @@ export default function RecipeDetailScreen() {
     }
   }
 
+  async function takePhoto() {
+    if (!recipe || savingPhoto) {
+      return;
+    }
+
+    try {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+      if (!permission.granted) {
+        Alert.alert(
+          "Camera Permission Required",
+          "Please allow camera access to take a photo.",
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ["images"],
+        quality: 0.8,
+        allowsEditing: false,
+      });
+
+      if (result.canceled || !result.assets?.[0]) {
+        return;
+      }
+
+      setSavingPhoto(true);
+
+      const savedUri = await saveRecipePhoto(recipe.id, result.assets[0].uri);
+
+      setCustomPhoto(savedUri);
+    } catch {
+      Alert.alert(
+        "Something went wrong",
+        "Could not save your photo. Please try again.",
+      );
+    } finally {
+      setSavingPhoto(false);
+    }
+  }
+
+  function confirmRemovePhoto() {
+    if (!recipe || savingPhoto) {
+      return;
+    }
+
+    Alert.alert(
+      "Remove Photo",
+      "Do you want to remove your photo and restore the original recipe image?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setSavingPhoto(true);
+              await removeRecipePhoto(recipe.id);
+              setCustomPhoto(null);
+            } catch {
+              Alert.alert(
+                "Something went wrong",
+                "Could not remove your photo.",
+              );
+            } finally {
+              setSavingPhoto(false);
+            }
+          },
+        },
+      ],
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <Pressable onPress={() => router.back()} style={styles.backButton}>
@@ -105,7 +190,12 @@ export default function RecipeDetailScreen() {
         <Text style={styles.errorText}>{error ?? "Recipe not found."}</Text>
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
-          <Image source={{ uri: recipe.image }} style={styles.image} />
+          <Image
+            source={{ uri: customPhoto ?? recipe.image }}
+            style={styles.image}
+          />
+
+          {customPhoto && <Text style={styles.photoLabel}>Your photo</Text>}
 
           <Text style={styles.title}>{recipe.name}</Text>
 
@@ -114,6 +204,30 @@ export default function RecipeDetailScreen() {
             {"  •  "}
             {recipe.servings} servings
           </Text>
+
+          <Pressable
+            style={styles.photoButton}
+            onPress={takePhoto}
+            disabled={savingPhoto}
+          >
+            <Text style={styles.photoButtonText}>
+              {savingPhoto
+                ? "Saving Photo..."
+                : customPhoto
+                  ? "Replace Photo"
+                  : "Take a Photo"}
+            </Text>
+          </Pressable>
+
+          {customPhoto && (
+            <Pressable
+              style={styles.removePhotoButton}
+              onPress={confirmRemovePhoto}
+              disabled={savingPhoto}
+            >
+              <Text style={styles.removePhotoText}>Remove Photo</Text>
+            </Pressable>
+          )}
 
           <Pressable
             style={[
@@ -191,6 +305,12 @@ const styles = StyleSheet.create({
     height: 230,
     borderRadius: 12,
   },
+  photoLabel: {
+    fontSize: 13,
+    color: "#2E7D32",
+    marginTop: 8,
+    fontWeight: "600",
+  },
   title: {
     fontSize: 27,
     fontWeight: "bold",
@@ -202,6 +322,28 @@ const styles = StyleSheet.create({
     color: "#666666",
     marginTop: 10,
   },
+  photoButton: {
+    backgroundColor: "#2E7D32",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  photoButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  removePhotoButton: {
+    alignItems: "center",
+    paddingVertical: 12,
+    marginTop: 4,
+  },
+  removePhotoText: {
+    color: "#B00020",
+    fontSize: 15,
+    fontWeight: "600",
+  },
   favoriteButton: {
     borderWidth: 1,
     borderColor: "#2E7D32",
@@ -209,7 +351,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 16,
   },
   favoriteButtonActive: {
     backgroundColor: "#2E7D32",

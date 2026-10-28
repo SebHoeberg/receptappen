@@ -1,5 +1,5 @@
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -12,12 +12,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { getRecipePhoto } from "../services/photoStorage";
 import { getRecipes, Recipe } from "../services/recipeApi";
 
 export default function HomeScreen() {
   const router = useRouter();
 
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [recipePhotos, setRecipePhotos] = useState<Record<number, string>>({});
   const [searchText, setSearchText] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +41,43 @@ export default function HomeScreen() {
   useEffect(() => {
     loadRecipes();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+
+      async function loadPhotos() {
+        try {
+          const photos = await Promise.all(
+            recipes.map(async (recipe) => ({
+              id: recipe.id,
+              uri: await getRecipePhoto(recipe.id),
+            })),
+          );
+
+          if (!active) return;
+
+          const updatedPhotos: Record<number, string> = {};
+
+          photos.forEach(({ id, uri }) => {
+            if (uri) {
+              updatedPhotos[id] = uri;
+            }
+          });
+
+          setRecipePhotos(updatedPhotos);
+        } catch {
+          // Original recipe images remain available.
+        }
+      }
+
+      loadPhotos();
+
+      return () => {
+        active = false;
+      };
+    }, [recipes]),
+  );
 
   function openRecipe(recipe: Recipe) {
     router.push({
@@ -112,6 +151,7 @@ export default function HomeScreen() {
       ) : (
         <FlatList
           data={filteredRecipes}
+          extraData={recipePhotos}
           keyExtractor={(item) => item.id.toString()}
           keyboardShouldPersistTaps="handled"
           ListEmptyComponent={
@@ -124,7 +164,12 @@ export default function HomeScreen() {
               style={styles.recipeCard}
               onPress={() => openRecipe(item)}
             >
-              <Image source={{ uri: item.image }} style={styles.recipeImage} />
+              <Image
+                source={{
+                  uri: recipePhotos[item.id] ?? item.image,
+                }}
+                style={styles.recipeImage}
+              />
 
               <View style={styles.recipeInfo}>
                 <Text style={styles.recipeName}>{item.name}</Text>
