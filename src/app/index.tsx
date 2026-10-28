@@ -30,7 +30,7 @@ export default function HomeScreen() {
       const fetchedRecipes = await getRecipes();
       setRecipes(fetchedRecipes);
     } catch {
-      setError("Kunde inte hämta recepten. Försök igen.");
+      setError("Could not load recipes. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -69,14 +69,12 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Receptappen</Text>
-      <Text style={styles.subtitle}>
-        Hitta inspiration till din nästa måltid!
-      </Text>
+      <Text style={styles.title}>EasyCooking</Text>
+      <Text style={styles.subtitle}>Find your next favorite recipe.</Text>
 
       <TextInput
         style={styles.searchInput}
-        placeholder="Sök recept eller ingrediens..."
+        placeholder="Search recipes or ingredients..."
         placeholderTextColor="#888888"
         value={searchText}
         onChangeText={setSearchText}
@@ -92,23 +90,23 @@ export default function HomeScreen() {
         onPress={surpriseMe}
         disabled={loading || recipes.length === 0}
       >
-        <Text style={styles.surpriseButtonText}>Överraska mig!</Text>
+        <Text style={styles.surpriseButtonText}>Surprise Me!</Text>
       </Pressable>
 
       <Pressable
         style={styles.favoritesButton}
         onPress={() => router.push("/favorites")}
       >
-        <Text style={styles.favoritesButtonText}>Mina favoriter</Text>
+        <Text style={styles.favoritesButtonText}>My Favorites</Text>
       </Pressable>
 
       {loading ? (
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#2E7D32" />
       ) : error ? (
         <View style={styles.messageContainer}>
           <Text style={styles.errorText}>{error}</Text>
           <Pressable onPress={loadRecipes}>
-            <Text style={styles.retryText}>Försök igen</Text>
+            <Text style={styles.retryText}>Try Again</Text>
           </Pressable>
         </View>
       ) : (
@@ -118,7 +116,7 @@ export default function HomeScreen() {
           keyboardShouldPersistTaps="handled"
           ListEmptyComponent={
             <Text style={styles.emptyText}>
-              Inga recept hittades. Prova en annan sökning.
+              No recipes found. Try another search.
             </Text>
           }
           renderItem={({ item }) => (
@@ -136,7 +134,7 @@ export default function HomeScreen() {
                 </Text>
 
                 <Text style={styles.recipeServings}>
-                  {item.servings} portioner
+                  {item.servings} servings
                 </Text>
               </View>
             </Pressable>

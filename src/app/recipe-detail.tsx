@@ -1,21 +1,21 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
-    addFavorite,
-    isFavorite,
-    removeFavorite,
+  addFavorite,
+  isFavorite,
+  removeFavorite,
 } from "../services/favoriteStorage";
 import { getRecipes, Recipe } from "../services/recipeApi";
 
@@ -41,7 +41,7 @@ export default function RecipeDetailScreen() {
         const selectedRecipe = recipes.find((item) => item.id === Number(id));
 
         if (!selectedRecipe) {
-          throw new Error("Receptet hittades inte.");
+          throw new Error("Recipe not found.");
         }
 
         const savedAsFavorite = await isFavorite(selectedRecipe.id);
@@ -52,7 +52,7 @@ export default function RecipeDetailScreen() {
         }
       } catch {
         if (active) {
-          setError("Kunde inte visa receptet.");
+          setError("Could not load the recipe.");
         }
       } finally {
         if (active) {
@@ -84,7 +84,10 @@ export default function RecipeDetailScreen() {
         setFavorite(true);
       }
     } catch {
-      Alert.alert("Något gick fel", "Kunde inte spara ändringen. Försök igen.");
+      Alert.alert(
+        "Something went wrong",
+        "Could not save your changes. Please try again.",
+      );
     } finally {
       setSavingFavorite(false);
     }
@@ -93,15 +96,13 @@ export default function RecipeDetailScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <Pressable onPress={() => router.back()} style={styles.backButton}>
-        <Text style={styles.backText}>← Tillbaka</Text>
+        <Text style={styles.backText}>← Back</Text>
       </Pressable>
 
       {loading ? (
         <ActivityIndicator size="large" style={styles.loading} />
       ) : error || !recipe ? (
-        <Text style={styles.errorText}>
-          {error ?? "Receptet hittades inte."}
-        </Text>
+        <Text style={styles.errorText}>{error ?? "Recipe not found."}</Text>
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
           <Image source={{ uri: recipe.image }} style={styles.image} />
@@ -109,9 +110,9 @@ export default function RecipeDetailScreen() {
           <Text style={styles.title}>{recipe.name}</Text>
 
           <Text style={styles.info}>
-            {recipe.prepTimeMinutes + recipe.cookTimeMinutes} minuter
+            {recipe.prepTimeMinutes + recipe.cookTimeMinutes} minutes
             {"  •  "}
-            {recipe.servings} portioner
+            {recipe.servings} servings
           </Text>
 
           <Pressable
@@ -129,14 +130,14 @@ export default function RecipeDetailScreen() {
               ]}
             >
               {savingFavorite
-                ? "Sparar..."
+                ? "Saving..."
                 : favorite
-                  ? "Ta bort från favoriter"
-                  : "Spara som favorit"}
+                  ? "Remove from Favorites"
+                  : "Add to Favorites"}
             </Text>
           </Pressable>
 
-          <Text style={styles.heading}>Ingredienser</Text>
+          <Text style={styles.heading}>Ingredients</Text>
 
           {recipe.ingredients.map((ingredient, index) => (
             <Text key={index} style={styles.listText}>
@@ -144,7 +145,7 @@ export default function RecipeDetailScreen() {
             </Text>
           ))}
 
-          <Text style={styles.heading}>Gör så här</Text>
+          <Text style={styles.heading}>Instructions</Text>
 
           {recipe.instructions.map((instruction, index) => (
             <View key={index} style={styles.instructionRow}>

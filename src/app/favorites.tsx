@@ -1,13 +1,13 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -37,7 +37,7 @@ export default function FavoritesScreen() {
 
       setFavorites(savedRecipes);
     } catch {
-      setError("Kunde inte hämta dina favoriter.");
+      setError("Could not load your favorites.");
     } finally {
       setLoading(false);
     }
@@ -52,20 +52,20 @@ export default function FavoritesScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <Pressable style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>← Tillbaka</Text>
+        <Text style={styles.backText}>← Back</Text>
       </Pressable>
 
-      <Text style={styles.title}>Mina favoriter</Text>
-      <Text style={styles.subtitle}>Här hittar du dina sparade recept.</Text>
+      <Text style={styles.title}>My Favorites</Text>
+      <Text style={styles.subtitle}>Your saved recipes in one place.</Text>
 
       {loading ? (
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#2E7D32" />
       ) : error ? (
         <View style={styles.messageContainer}>
           <Text style={styles.errorText}>{error}</Text>
 
           <Pressable onPress={loadFavorites}>
-            <Text style={styles.retryText}>Försök igen</Text>
+            <Text style={styles.retryText}>Try Again</Text>
           </Pressable>
         </View>
       ) : (
@@ -75,7 +75,7 @@ export default function FavoritesScreen() {
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <Text style={styles.emptyText}>
-              Du har inga sparade favoriter ännu.
+              You haven't saved any favorites yet.
             </Text>
           }
           renderItem={({ item }) => (
@@ -98,7 +98,7 @@ export default function FavoritesScreen() {
                 </Text>
 
                 <Text style={styles.recipeServings}>
-                  {item.servings} portioner
+                  {item.servings} servings
                 </Text>
               </View>
             </Pressable>
