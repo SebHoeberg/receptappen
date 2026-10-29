@@ -185,7 +185,11 @@ export default function RecipeDetailScreen() {
       </Pressable>
 
       {loading ? (
-        <ActivityIndicator size="large" style={styles.loading} />
+        <ActivityIndicator
+          size="large"
+          color="#2E7D32"
+          style={styles.loading}
+        />
       ) : error || !recipe ? (
         <Text style={styles.errorText}>{error ?? "Recipe not found."}</Text>
       ) : (
@@ -199,25 +203,57 @@ export default function RecipeDetailScreen() {
 
           <Text style={styles.title}>{recipe.name}</Text>
 
-          <Text style={styles.info}>
-            {recipe.prepTimeMinutes + recipe.cookTimeMinutes} minutes
-            {"  •  "}
-            {recipe.servings} servings
-          </Text>
+          <View style={styles.infoRow}>
+            <View style={styles.infoCard}>
+              <Text style={styles.infoLabel}>TOTAL TIME</Text>
+              <Text style={styles.infoValue}>
+                {recipe.prepTimeMinutes + recipe.cookTimeMinutes} min
+              </Text>
+            </View>
 
-          <Pressable
-            style={styles.photoButton}
-            onPress={takePhoto}
-            disabled={savingPhoto}
-          >
-            <Text style={styles.photoButtonText}>
-              {savingPhoto
-                ? "Saving Photo..."
-                : customPhoto
-                  ? "Replace Photo"
-                  : "Take a Photo"}
-            </Text>
-          </Pressable>
+            <View style={styles.infoCard}>
+              <Text style={styles.infoLabel}>SERVINGS</Text>
+              <Text style={styles.infoValue}>{recipe.servings}</Text>
+            </View>
+          </View>
+
+          <View style={styles.actionRow}>
+            <Pressable
+              style={styles.photoButton}
+              onPress={takePhoto}
+              disabled={savingPhoto}
+            >
+              <Text style={styles.photoButtonText}>
+                {savingPhoto
+                  ? "Saving..."
+                  : customPhoto
+                    ? "Replace Photo"
+                    : "Take a Photo"}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={[
+                styles.favoriteButton,
+                favorite && styles.favoriteButtonActive,
+              ]}
+              onPress={toggleFavorite}
+              disabled={savingFavorite}
+            >
+              <Text
+                style={[
+                  styles.favoriteButtonText,
+                  favorite && styles.favoriteButtonTextActive,
+                ]}
+              >
+                {savingFavorite
+                  ? "Saving..."
+                  : favorite
+                    ? "Remove Favorite"
+                    : "Add Favorite"}
+              </Text>
+            </Pressable>
+          </View>
 
           {customPhoto && (
             <Pressable
@@ -229,44 +265,30 @@ export default function RecipeDetailScreen() {
             </Pressable>
           )}
 
-          <Pressable
-            style={[
-              styles.favoriteButton,
-              favorite && styles.favoriteButtonActive,
-            ]}
-            onPress={toggleFavorite}
-            disabled={savingFavorite}
-          >
-            <Text
-              style={[
-                styles.favoriteButtonText,
-                favorite && styles.favoriteButtonTextActive,
-              ]}
-            >
-              {savingFavorite
-                ? "Saving..."
-                : favorite
-                  ? "Remove from Favorites"
-                  : "Add to Favorites"}
-            </Text>
-          </Pressable>
-
           <Text style={styles.heading}>Ingredients</Text>
 
-          {recipe.ingredients.map((ingredient, index) => (
-            <Text key={index} style={styles.listText}>
-              • {ingredient}
-            </Text>
-          ))}
+          <View style={styles.sectionCard}>
+            {recipe.ingredients.map((ingredient, index) => (
+              <View key={index} style={styles.ingredientRow}>
+                <View style={styles.ingredientDot} />
+                <Text style={styles.ingredientText}>{ingredient}</Text>
+              </View>
+            ))}
+          </View>
 
           <Text style={styles.heading}>Instructions</Text>
 
-          {recipe.instructions.map((instruction, index) => (
-            <View key={index} style={styles.instructionRow}>
-              <Text style={styles.stepNumber}>{index + 1}.</Text>
-              <Text style={styles.instructionText}>{instruction}</Text>
-            </View>
-          ))}
+          <View style={styles.sectionCard}>
+            {recipe.instructions.map((instruction, index) => (
+              <View key={index} style={styles.instructionRow}>
+                <View style={styles.stepCircle}>
+                  <Text style={styles.stepNumber}>{index + 1}</Text>
+                </View>
+
+                <Text style={styles.instructionText}>{instruction}</Text>
+              </View>
+            ))}
+          </View>
         </ScrollView>
       )}
     </SafeAreaView>
@@ -302,8 +324,8 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 230,
-    borderRadius: 12,
+    height: 250,
+    borderRadius: 16,
   },
   photoLabel: {
     fontSize: 13,
@@ -316,23 +338,73 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333333",
     marginTop: 20,
+    marginBottom: 18,
   },
-  info: {
-    fontSize: 15,
-    color: "#666666",
-    marginTop: 10,
+  infoRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  infoCard: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+  },
+  infoLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#888888",
+    marginBottom: 7,
+    letterSpacing: 0.5,
+  },
+  infoValue: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#2E7D32",
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 20,
   },
   photoButton: {
+    flex: 1,
     backgroundColor: "#2E7D32",
     borderRadius: 12,
-    paddingVertical: 14,
+    paddingVertical: 15,
+    paddingHorizontal: 8,
     alignItems: "center",
-    marginTop: 20,
+    justifyContent: "center",
   },
   photoButtonText: {
     color: "#FFFFFF",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
+    textAlign: "center",
+  },
+  favoriteButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#2E7D32",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    paddingVertical: 15,
+    paddingHorizontal: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  favoriteButtonActive: {
+    backgroundColor: "#2E7D32",
+  },
+  favoriteButtonText: {
+    color: "#2E7D32",
+    fontSize: 14,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  favoriteButtonTextActive: {
+    color: "#FFFFFF",
   },
   removePhotoButton: {
     alignItems: "center",
@@ -344,26 +416,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
   },
-  favoriteButton: {
-    borderWidth: 1,
-    borderColor: "#2E7D32",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 16,
-  },
-  favoriteButtonActive: {
-    backgroundColor: "#2E7D32",
-  },
-  favoriteButtonText: {
-    color: "#2E7D32",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  favoriteButtonTextActive: {
-    color: "#FFFFFF",
-  },
   heading: {
     fontSize: 22,
     fontWeight: "bold",
@@ -371,26 +423,53 @@ const styles = StyleSheet.create({
     marginTop: 28,
     marginBottom: 12,
   },
-  listText: {
+  sectionCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 18,
+  },
+  ingredientRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 12,
+  },
+  ingredientDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: "#2E7D32",
+    marginTop: 9,
+    marginRight: 12,
+  },
+  ingredientText: {
+    flex: 1,
     fontSize: 16,
     color: "#444444",
-    marginBottom: 9,
-    lineHeight: 24,
+    lineHeight: 25,
   },
   instructionRow: {
     flexDirection: "row",
-    marginBottom: 16,
+    alignItems: "flex-start",
+    marginBottom: 20,
+  },
+  stepCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "#E8F5E9",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
   },
   stepNumber: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
     color: "#2E7D32",
-    width: 30,
   },
   instructionText: {
+    flex: 1,
     fontSize: 16,
     color: "#444444",
-    lineHeight: 24,
-    flex: 1,
+    lineHeight: 25,
   },
 });
