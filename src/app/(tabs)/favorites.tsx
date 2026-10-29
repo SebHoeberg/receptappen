@@ -81,10 +81,6 @@ export default function FavoritesScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Pressable style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>← Back</Text>
-      </Pressable>
-
       <Text style={styles.title}>My Favorites</Text>
       <Text style={styles.subtitle}>Your saved recipes in one place.</Text>
 
@@ -151,19 +147,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF9F2",
     paddingHorizontal: 20,
   },
-  backButton: {
-    paddingVertical: 15,
-  },
-  backText: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#2E7D32",
-  },
   title: {
     fontSize: 30,
     fontWeight: "bold",
     color: "#333333",
-    marginTop: 10,
+    marginTop: 20,
   },
   subtitle: {
     fontSize: 16,
@@ -176,27 +164,31 @@ const styles = StyleSheet.create({
   },
   recipeCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    marginBottom: 15,
+    borderRadius: 14,
+    marginBottom: 12,
     overflow: "hidden",
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 115,
   },
   recipeImage: {
-    width: "100%",
-    height: 180,
+    width: 115,
+    height: 115,
   },
   recipeInfo: {
-    padding: 15,
+    flex: 1,
+    padding: 14,
   },
   recipeName: {
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: "bold",
     color: "#333333",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   recipeTime: {
     fontSize: 14,
     color: "#666666",
-    marginBottom: 4,
+    marginBottom: 5,
   },
   recipeServings: {
     fontSize: 14,
