@@ -13,16 +13,9 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <AnimatedSplashOverlay />
 
-      <Stack>
-        <Stack.Screen name="index" options={{ title: "Receptappen" }} />
-        <Stack.Screen name="explore" options={{ title: "Explore" }} />
-        <Stack.Screen
-          name="recipe-detail"
-          options={{
-            title: "Receptdetaljer",
-            headerShown: false,
-          }}
-        />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="recipe-detail" />
       </Stack>
     </ThemeProvider>
   );

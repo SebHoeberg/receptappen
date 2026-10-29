@@ -12,8 +12,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { getRecipePhoto } from "../services/photoStorage";
-import { getRecipes, Recipe } from "../services/recipeApi";
+import { getRecipePhoto } from "../../services/photoStorage";
+import { getRecipes, Recipe } from "../../services/recipeApi";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -132,13 +132,6 @@ export default function HomeScreen() {
         <Text style={styles.surpriseButtonText}>Surprise Me!</Text>
       </Pressable>
 
-      <Pressable
-        style={styles.favoritesButton}
-        onPress={() => router.push("/favorites")}
-      >
-        <Text style={styles.favoritesButtonText}>My Favorites</Text>
-      </Pressable>
-
       {loading ? (
         <ActivityIndicator size="large" color="#2E7D32" />
       ) : error ? (
@@ -225,27 +218,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 15,
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 20,
   },
   disabledButton: {
     opacity: 0.5,
   },
   surpriseButtonText: {
     color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "bold",
-  },
-  favoritesButton: {
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#2E7D32",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  favoritesButtonText: {
-    color: "#2E7D32",
     fontSize: 17,
     fontWeight: "bold",
   },

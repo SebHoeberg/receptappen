@@ -11,9 +11,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { getFavorites } from "../services/favoriteStorage";
-import { getRecipePhoto } from "../services/photoStorage";
-import { getRecipes, Recipe } from "../services/recipeApi";
+import { getFavorites } from "../../services/favoriteStorage";
+import { getRecipePhoto } from "../../services/photoStorage";
+import { getRecipes, Recipe } from "../../services/recipeApi";
 
 export default function FavoritesScreen() {
   const router = useRouter();
