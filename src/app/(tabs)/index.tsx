@@ -18,12 +18,16 @@ import { getRecipes, Recipe } from "../../services/recipeApi";
 export default function HomeScreen() {
   const router = useRouter();
 
+  // Sparar recepten, användarens egna bilder och aktuell söktext.
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [recipePhotos, setRecipePhotos] = useState<Record<number, string>>({});
   const [searchText, setSearchText] = useState("");
+
+  // Håller reda på om recepten laddas eller om ett fel har uppstått.
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Hämtar recepten från API:et och uppdaterar listan på startsidan.
   async function loadRecipes() {
     try {
       setLoading(true);
@@ -34,20 +38,25 @@ export default function HomeScreen() {
     } catch {
       setError("Could not load recipes. Please try again.");
     } finally {
+      // Avslutar laddningsläget oavsett om hämtningen lyckades.
       setLoading(false);
     }
   }
 
+  // Hämtar recepten första gången startsidan öppnas.
   useEffect(() => {
     loadRecipes();
   }, []);
 
+  // Uppdaterar användarens egna receptbilder när startsidan får fokus.
+  // Detta behövs om en bild har lagts till eller tagits bort på receptsidan.
   useFocusEffect(
     useCallback(() => {
       let active = true;
 
       async function loadPhotos() {
         try {
+          // Hämtar eventuella egna bilder för alla recept.
           const photos = await Promise.all(
             recipes.map(async (recipe) => ({
               id: recipe.id,
@@ -55,10 +64,12 @@ export default function HomeScreen() {
             })),
           );
 
+          // Undviker att uppdatera sidan efter att den tappat fokus.
           if (!active) return;
 
           const updatedPhotos: Record<number, string> = {};
 
+          // Sparar endast recept som har en egen bild.
           photos.forEach(({ id, uri }) => {
             if (uri) {
               updatedPhotos[id] = uri;
@@ -67,7 +78,7 @@ export default function HomeScreen() {
 
           setRecipePhotos(updatedPhotos);
         } catch {
-          // Original recipe images remain available.
+          // Om bildhämtningen misslyckas kan originalbilderna fortfarande visas.
         }
       }
 
@@ -79,6 +90,7 @@ export default function HomeScreen() {
     }, [recipes]),
   );
 
+  // Öppnar receptsidan och skickar med ID för det valda receptet.
   function openRecipe(recipe: Recipe) {
     router.push({
       pathname: "/recipe-detail",
@@ -86,6 +98,7 @@ export default function HomeScreen() {
     });
   }
 
+  // Väljer ett slumpmässigt recept bland de hämtade recepten.
   function surpriseMe() {
     if (recipes.length === 0) {
       return;
@@ -95,6 +108,8 @@ export default function HomeScreen() {
     openRecipe(recipes[randomIndex]);
   }
 
+  // Filtrerar recepten efter namn eller ingredienser.
+  // Sökningen fungerar oavsett stora eller små bokstäver.
   const filteredRecipes = recipes.filter((recipe) => {
     const search = searchText.trim().toLowerCase();
 
@@ -111,6 +126,7 @@ export default function HomeScreen() {
       <Text style={styles.title}>EasyCooking</Text>
       <Text style={styles.subtitle}>Find your next favorite recipe.</Text>
 
+      {/* Sökfältet uppdaterar receptlistan när användaren skriver. */}
       <TextInput
         style={styles.searchInput}
         placeholder="Search recipes or ingredients..."
@@ -121,6 +137,7 @@ export default function HomeScreen() {
         returnKeyType="search"
       />
 
+      {/* Knappen inaktiveras när recepten laddas eller listan är tom. */}
       <Pressable
         style={[
           styles.surpriseButton,
@@ -132,6 +149,7 @@ export default function HomeScreen() {
         <Text style={styles.surpriseButtonText}>Surprise Me!</Text>
       </Pressable>
 
+      {/* Visar laddningsindikator, felmeddelande eller receptlistan. */}
       {loading ? (
         <ActivityIndicator size="large" color="#2E7D32" />
       ) : error ? (
@@ -157,6 +175,7 @@ export default function HomeScreen() {
               style={styles.recipeCard}
               onPress={() => openRecipe(item)}
             >
+              {/* Visar användarens egen bild om den finns, annars originalbilden. */}
               <Image
                 source={{
                   uri: recipePhotos[item.id] ?? item.image,
@@ -167,6 +186,7 @@ export default function HomeScreen() {
               <View style={styles.recipeInfo}>
                 <Text style={styles.recipeName}>{item.name}</Text>
 
+                {/* Total tid beräknas genom förberedelse- och tillagningstid. */}
                 <Text style={styles.recipeTime}>
                   {item.prepTimeMinutes + item.cookTimeMinutes} min
                 </Text>
@@ -184,6 +204,7 @@ export default function HomeScreen() {
   );
 }
 
+// Stilar för startsidans layout, knappar, sökfält och receptkort.
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -4,6 +4,7 @@ import { Tabs } from "expo-router";
 export default function TabsLayout() {
   return (
     <Tabs
+      // Gemensamma inställningar för flikarnas utseende och navigering.
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: "#2E7D32",
@@ -21,6 +22,7 @@ export default function TabsLayout() {
         },
       }}
     >
+      {/* Home-fliken visar startsidan med recept och sökfunktion. */}
       <Tabs.Screen
         name="index"
         options={{
@@ -31,6 +33,7 @@ export default function TabsLayout() {
         }}
       />
 
+      {/* Favorites-fliken visar användarens sparade recept. */}
       <Tabs.Screen
         name="favorites"
         options={{

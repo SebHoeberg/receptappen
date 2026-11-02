@@ -27,8 +27,10 @@ import { getRecipes, Recipe } from "../services/recipeApi";
 
 export default function RecipeDetailScreen() {
   const router = useRouter();
+  // Hämtar receptets ID från navigeringen.
   const { id } = useLocalSearchParams<{ id: string }>();
 
+  // Håller reda på receptet, laddningsstatus, favoritstatus och egen bild.
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +39,7 @@ export default function RecipeDetailScreen() {
   const [customPhoto, setCustomPhoto] = useState<string | null>(null);
   const [savingPhoto, setSavingPhoto] = useState(false);
 
+  // Hämtar valt recept och dess sparade favoritstatus och bild när ID ändras.
   useEffect(() => {
     let active = true;
 
@@ -45,6 +48,7 @@ export default function RecipeDetailScreen() {
         setLoading(true);
         setError(null);
 
+        // Letar upp receptet med samma ID som skickades från föregående sida.
         const recipes = await getRecipes();
         const selectedRecipe = recipes.find((item) => item.id === Number(id));
 
@@ -52,6 +56,7 @@ export default function RecipeDetailScreen() {
           throw new Error("Recipe not found.");
         }
 
+        // Läser favoritstatus och egen bild samtidigt från lokal lagring.
         const [savedAsFavorite, savedPhoto] = await Promise.all([
           isFavorite(selectedRecipe.id),
           getRecipePhoto(selectedRecipe.id),
@@ -75,11 +80,13 @@ export default function RecipeDetailScreen() {
 
     loadRecipe();
 
+    // Förhindrar att en avslutad hämtning uppdaterar en lämnad sida.
     return () => {
       active = false;
     };
   }, [id]);
 
+  // Lägger till eller tar bort receptet från favoriterna.
   async function toggleFavorite() {
     if (!recipe || savingFavorite) {
       return;
@@ -105,12 +112,14 @@ export default function RecipeDetailScreen() {
     }
   }
 
+  // Kontrollerar kamerabehörighet, tar en bild och sparar den till receptet.
   async function takePhoto() {
     if (!recipe || savingPhoto) {
       return;
     }
 
     try {
+      // Användaren måste godkänna kamerabehörighet innan kameran öppnas.
       const permission = await ImagePicker.requestCameraPermissionsAsync();
 
       if (!permission.granted) {
@@ -127,12 +136,14 @@ export default function RecipeDetailScreen() {
         allowsEditing: false,
       });
 
+      // Avbryter om användaren stängde kameran utan att ta en bild.
       if (result.canceled || !result.assets?.[0]) {
         return;
       }
 
       setSavingPhoto(true);
 
+      // Flyttar bilden till appens lagring och kopplar den till receptets ID.
       const savedUri = await saveRecipePhoto(recipe.id, result.assets[0].uri);
 
       setCustomPhoto(savedUri);
@@ -146,6 +157,7 @@ export default function RecipeDetailScreen() {
     }
   }
 
+  // Ber om bekräftelse innan en egen bild raderas.
   function confirmRemovePhoto() {
     if (!recipe || savingPhoto) {
       return;
@@ -162,6 +174,7 @@ export default function RecipeDetailScreen() {
           onPress: async () => {
             try {
               setSavingPhoto(true);
+              // Tar bort bildfilen och kopplingen i lokal lagring.
               await removeRecipePhoto(recipe.id);
               setCustomPhoto(null);
             } catch {
@@ -184,6 +197,7 @@ export default function RecipeDetailScreen() {
         <Text style={styles.backText}>← Back</Text>
       </Pressable>
 
+      {/* Visar laddning, felmeddelande eller receptets innehåll. */}
       {loading ? (
         <ActivityIndicator
           size="large"
@@ -194,6 +208,7 @@ export default function RecipeDetailScreen() {
         <Text style={styles.errorText}>{error ?? "Recipe not found."}</Text>
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
+          {/* Använder egen bild om den finns, annars receptets originalbild. */}
           <Image
             source={{ uri: customPhoto ?? recipe.image }}
             style={styles.image}
@@ -217,6 +232,7 @@ export default function RecipeDetailScreen() {
             </View>
           </View>
 
+          {/* Knapparna låter användaren ta en bild eller ändra favoritstatus. */}
           <View style={styles.actionRow}>
             <Pressable
               style={styles.photoButton}
@@ -255,6 +271,7 @@ export default function RecipeDetailScreen() {
             </Pressable>
           </View>
 
+          {/* Borttagningsknappen visas bara när en egen bild finns. */}
           {customPhoto && (
             <Pressable
               style={styles.removePhotoButton}
@@ -265,6 +282,7 @@ export default function RecipeDetailScreen() {
             </Pressable>
           )}
 
+          {/* Ingredienserna visas som en lista. */}
           <Text style={styles.heading}>Ingredients</Text>
 
           <View style={styles.sectionCard}>
@@ -276,6 +294,7 @@ export default function RecipeDetailScreen() {
             ))}
           </View>
 
+          {/* Varje instruktion visas som ett numrerat steg. */}
           <Text style={styles.heading}>Instructions</Text>
 
           <View style={styles.sectionCard}>
@@ -295,6 +314,7 @@ export default function RecipeDetailScreen() {
   );
 }
 
+// Stilar för receptinformation, knappar, bilder och instruktioner.
 const styles = StyleSheet.create({
   container: {
     flex: 1,

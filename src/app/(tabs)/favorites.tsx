@@ -18,25 +18,30 @@ import { getRecipes, Recipe } from "../../services/recipeApi";
 export default function FavoritesScreen() {
   const router = useRouter();
 
+  // Sparar favoritrecepten, användarens egna bilder och sidans status.
   const [favorites, setFavorites] = useState<Recipe[]>([]);
   const [recipePhotos, setRecipePhotos] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Hämtar recepten och användarens sparade favorit-ID:n.
   const loadFavorites = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
+      // Hämtar recept och favoriter samtidigt för att minska väntetiden.
       const [recipes, favoriteIds] = await Promise.all([
         getRecipes(),
         getFavorites(),
       ]);
 
+      // Filtrerar fram de recept vars ID finns i favoritlistan.
       const savedRecipes = recipes.filter((recipe) =>
         favoriteIds.includes(recipe.id),
       );
 
+      // Hämtar eventuella egna bilder för de sparade recepten.
       const photos = await Promise.all(
         savedRecipes.map(async (recipe) => ({
           id: recipe.id,
@@ -46,6 +51,7 @@ export default function FavoritesScreen() {
 
       const updatedPhotos: Record<number, string> = {};
 
+      // Sparar bildkopplingarna för recept som har en egen bild.
       photos.forEach(({ id, uri }) => {
         if (uri) {
           updatedPhotos[id] = uri;
@@ -55,12 +61,16 @@ export default function FavoritesScreen() {
       setFavorites(savedRecipes);
       setRecipePhotos(updatedPhotos);
     } catch {
+      // Visar ett felmeddelande om favoriterna inte kan hämtas.
       setError("Could not load your favorites.");
     } finally {
+      // Avslutar laddningsläget även om något gick fel.
       setLoading(false);
     }
   }, []);
 
+  // Uppdaterar favoritlistan varje gång användaren öppnar fliken.
+  // På så sätt visas ändringar som gjorts på receptsidan.
   useFocusEffect(
     useCallback(() => {
       let active = true;
@@ -84,6 +94,7 @@ export default function FavoritesScreen() {
       <Text style={styles.title}>My Favorites</Text>
       <Text style={styles.subtitle}>Your saved recipes in one place.</Text>
 
+      {/* Visar laddningsindikator, felmeddelande eller sparade recept. */}
       {loading ? (
         <ActivityIndicator size="large" color="#2E7D32" />
       ) : error ? (
@@ -115,6 +126,7 @@ export default function FavoritesScreen() {
                 })
               }
             >
+              {/* Visar den egna bilden om den finns, annars receptets originalbild. */}
               <Image
                 source={{
                   uri: recipePhotos[item.id] ?? item.image,
@@ -125,6 +137,7 @@ export default function FavoritesScreen() {
               <View style={styles.recipeInfo}>
                 <Text style={styles.recipeName}>{item.name}</Text>
 
+                {/* Visar den totala tiden för förberedelse och tillagning. */}
                 <Text style={styles.recipeTime}>
                   {item.prepTimeMinutes + item.cookTimeMinutes} min
                 </Text>
@@ -141,6 +154,7 @@ export default function FavoritesScreen() {
   );
 }
 
+// Stilar för favoritflikens layout, receptkort och meddelanden.
 const styles = StyleSheet.create({
   container: {
     flex: 1,
